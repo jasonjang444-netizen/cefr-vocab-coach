@@ -38,9 +38,17 @@ Once the repo is on GitHub, Vercel can deploy directly from it.
 
 ## Step 2: Create a Managed PostgreSQL Database
 
-Use Neon or Supabase and copy these values:
+Use Neon or Supabase and copy this value:
 
 - `DATABASE_URL`
+
+If you use Supabase with Vercel, prefer the Supavisor Session pooler string from the Supabase `Connect` dialog. It usually looks like:
+
+```text
+postgresql://postgres.PROJECT_REF:PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres
+```
+
+Avoid the direct `db.PROJECT_REF.supabase.co:5432` string unless your environment supports IPv6 or you have the Supabase IPv4 add-on enabled.
 
 ## Step 3: Add the Database Env Vars
 
