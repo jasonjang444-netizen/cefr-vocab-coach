@@ -1,17 +1,18 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import Providers from "@/components/Providers";
+﻿import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import Providers from '@/components/Providers';
 
 const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
+  subsets: ['latin'],
+  variable: '--font-inter',
 });
 
 export const metadata: Metadata = {
-  title: "CEFR Vocab Coach — Reach Your Target Level",
-  description: "Take an AI placement test and follow a personalized daily vocabulary learning path designed for your CEFR level. Your personal vocabulary coach from A1 to C2.",
-  keywords: "CEFR, vocabulary, English learning, placement test, language coach, study plan",
+  title: 'CEFR Vocab Coach | Reach Your Target Level',
+  description:
+    'Take a placement test, set your CEFR goal, and follow a personalized daily vocabulary path from A1 to C2.',
+  keywords: ['CEFR', 'vocabulary', 'English learning', 'placement test', 'study plan'],
 };
 
 export default function RootLayout({

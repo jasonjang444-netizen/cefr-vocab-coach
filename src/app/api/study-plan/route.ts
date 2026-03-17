@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { buildStudyPlan, parseStoredList } from '@/lib/study-plan';
 
 export async function POST(request: Request) {
   try {
@@ -9,63 +10,57 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Calculate plan based on study time
-    let dailyNewWords = 5;
-    let dailyReview = 3;
-    let collocations = 2;
-    let examples = 2;
-    let miniQuiz = 1;
+    const [userLevel, placementResult] = await Promise.all([
+      prisma.userLevel.findUnique({ where: { userId } }),
+      prisma.placementTestResult.findUnique({ where: { userId } }),
+    ]);
 
-    if (studyMinutes >= 20) {
-      dailyNewWords = 10;
-      dailyReview = 5;
-      collocations = 3;
-      examples = 3;
-    }
-    if (studyMinutes >= 30) {
-      dailyNewWords = 15;
-      dailyReview = 8;
-      collocations = 5;
-      examples = 5;
-      miniQuiz = 2;
-    }
-    if (studyMinutes >= 45) {
-      dailyNewWords = 20;
-      dailyReview = 10;
-      collocations = 7;
-      examples = 7;
-      miniQuiz = 3;
-    }
+    const planDetails = buildStudyPlan(studyMinutes, {
+      currentLevel: userLevel?.currentCefr,
+      targetLevel: userLevel?.targetCefr,
+      weaknesses: parseStoredList(placementResult?.weaknesses),
+    });
 
     const plan = await prisma.studyPlan.upsert({
       where: { userId },
       create: {
         userId,
-        dailyNewWords,
-        dailyReview,
-        collocations,
-        examples,
-        miniQuiz,
+        dailyNewWords: planDetails.dailyNewWords,
+        dailyReview: planDetails.dailyReview,
+        collocations: planDetails.collocations,
+        examples: planDetails.examples,
+        miniQuiz: planDetails.miniQuiz,
       },
       update: {
-        dailyNewWords,
-        dailyReview,
-        collocations,
-        examples,
-        miniQuiz,
+        dailyNewWords: planDetails.dailyNewWords,
+        dailyReview: planDetails.dailyReview,
+        collocations: planDetails.collocations,
+        examples: planDetails.examples,
+        miniQuiz: planDetails.miniQuiz,
       },
     });
 
-    // Mark onboarding as done
-    await prisma.userLevel.update({
+    await prisma.userLevel.upsert({
       where: { userId },
-      data: {
+      create: {
+        userId,
+        studyMinutes,
+        onboardingDone: true,
+      },
+      update: {
         onboardingDone: true,
         studyMinutes,
       },
     });
 
-    return NextResponse.json({ plan });
+    return NextResponse.json({
+      plan: {
+        ...plan,
+        studyMinutes,
+        focusAreas: planDetails.focusAreas,
+        tagline: planDetails.tagline,
+      },
+    });
   } catch (error) {
     console.error('Error creating study plan:', error);
     return NextResponse.json({ error: 'Failed to create study plan' }, { status: 500 });

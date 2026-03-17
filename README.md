@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CEFR Vocab Coach
 
-## Getting Started
+CEFR Vocab Coach is a Next.js app for placement testing, target-level planning, daily vocabulary study, quizzes, and progress tracking.
 
-First, run the development server:
+## Stack
+
+- Next.js 16
+- React 19
+- Tailwind CSS 4
+- NextAuth
+- Prisma
+- PostgreSQL for deployment and long-term hosting
+
+## Local Development
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Copy the env template and fill in what you need:
+
+```bash
+cp .env.example .env
+```
+
+3. Start the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Useful Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+npm run db:generate
+npm run db:push
+npm run db:migrate:deploy
+npm run db:studio
+```
 
-## Learn More
+## Production Plan
 
-To learn more about Next.js, take a look at the following resources:
+This repo is now prepared for a managed PostgreSQL deployment. The production target is:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Vercel for app hosting
+- Managed PostgreSQL for the database
+- GitHub as the source of truth
+- Google OAuth updated for the production domain
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Use the detailed guide in [DEPLOYMENT.md](C:/Users/desktop/cefr-vocab-coach/DEPLOYMENT.md).
 
-## Deploy on Vercel
+Production env variable names are listed in [.env.production.example](C:/Users/desktop/cefr-vocab-coach/.env.production.example).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Vocabulary Import Direction
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The app is now ready for richer vocabulary content, including optional Korean fields for study mode:
+
+- English meaning
+- Korean meaning
+- English example sentence
+- Korean example translation
+- English collocations
+- Korean collocations
+
+Your Excel workbook can stay split by CEFR level (`A1` to `C2`) and later be imported into the database.
+
+## Rollback Safety
+
+A backup patch of the pre-Korean study-toggle state is saved at:
+
+- [pre-korean-study-toggle-20260317.patch](C:/Users/desktop/cefr-vocab-coach/backups/pre-korean-study-toggle-20260317.patch)

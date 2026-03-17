@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { startTransition, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CEFR_COLORS, CEFR_DESCRIPTIONS } from '@/lib/cefr';
+import { CEFR_COLORS, CEFR_DESCRIPTIONS, getDifficulty, getRecommendedTarget, normalizeCefrLevel } from '@/lib/cefr';
 
 interface PlacementResult {
   level: string;
@@ -11,98 +11,125 @@ interface PlacementResult {
   confidence: string;
   strengths: string[];
   weaknesses: string[];
+  recommendedTarget?: string;
 }
 
 export default function PlacementResultPage() {
   const router = useRouter();
   const [result, setResult] = useState<PlacementResult | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem('placementResult');
-    if (stored) {
-      setResult(JSON.parse(stored));
-    }
+    const storedResult = sessionStorage.getItem('placementResult');
+    startTransition(() => {
+      setResult(storedResult ? (JSON.parse(storedResult) as PlacementResult) : null);
+      setReady(true);
+    });
   }, []);
+
+  if (!ready) {
+    return (
+      <div className="bg-grid bg-gradient-radial min-h-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'var(--text-secondary)' }}>Loading your placement result...</p>
+      </div>
+    );
+  }
 
   if (!result) {
     return (
-      <div className="bg-grid bg-gradient-radial min-h-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>Loading results...</p>
+      <div className="bg-grid bg-gradient-radial min-h-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <div className="glass" style={{ borderRadius: '24px', padding: '28px', maxWidth: '520px', textAlign: 'center' }}>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>
+            We could not find your latest placement result.
+          </p>
+          <button onClick={() => router.push('/placement-test')} className="btn-primary" style={{ padding: '14px 24px' }}>
+            Take Placement Test
+          </button>
         </div>
       </div>
     );
   }
 
-  const color = CEFR_COLORS[result.level] || '#6366f1';
-  const description = CEFR_DESCRIPTIONS[result.level] || '';
-  const accuracy = Math.round((result.score / result.total) * 100);
+  const currentLevel = normalizeCefrLevel(result.level);
+  const recommendedTarget = normalizeCefrLevel(result.recommendedTarget ?? getRecommendedTarget(currentLevel));
+  const color = CEFR_COLORS[currentLevel];
+  const description = CEFR_DESCRIPTIONS[currentLevel];
+  const accuracy = Math.round((result.score / Math.max(1, result.total)) * 100);
 
   return (
     <div className="bg-grid bg-gradient-radial min-h-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-      <div className="animate-fade-in" style={{ width: '100%', maxWidth: '560px', textAlign: 'center' }}>
-        {/* Celebration */}
-        <div style={{ fontSize: '4rem', marginBottom: '16px' }}>🎉</div>
+      <div className="animate-fade-in" style={{ width: '100%', maxWidth: '860px' }}>
+        <div className="glass" style={{ borderRadius: '28px', padding: '34px', marginBottom: '22px' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
+            Placement result
+          </p>
+          <h1 style={{ fontSize: '2.3rem', fontWeight: 800, marginBottom: '12px' }}>Current level: {currentLevel}</h1>
+          <p style={{ color: 'var(--text-secondary)', maxWidth: '640px', marginBottom: '28px' }}>
+            Your result suggests an overall <span style={{ color, fontWeight: 700 }}>{description}</span> vocabulary profile with <strong>{result.confidence.toLowerCase()}</strong> confidence.
+          </p>
 
-        <h1 style={{ fontSize: '2rem', fontWeight: '800', marginBottom: '8px' }}>Test Complete!</h1>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '36px' }}>Here are your results</p>
-
-        {/* Level Result Card */}
-        <div className="glass" style={{ borderRadius: '20px', padding: '40px', marginBottom: '24px' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Your Current Level</p>
-
-          <div style={{
-            width: '120px',
-            height: '120px',
-            borderRadius: '50%',
-            border: `4px solid ${color}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 16px',
-            background: `${color}15`,
-          }}>
-            <span style={{ fontSize: '2.5rem', fontWeight: '800', color }}>{result.level}</span>
-          </div>
-
-          <p style={{ fontSize: '1.2rem', fontWeight: '600', color, marginBottom: '4px' }}>{description}</p>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Confidence: {result.confidence}</p>
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '32px', marginTop: '28px', paddingTop: '24px', borderTop: '1px solid var(--border-color)' }}>
-            <div>
-              <p style={{ fontSize: '1.8rem', fontWeight: '700' }}>{result.score}/{result.total}</p>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Correct Answers</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+            <div className="card" style={{ padding: '22px' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginBottom: '6px' }}>Correct answers</p>
+              <p style={{ fontSize: '2rem', fontWeight: 800 }}>{result.score}/{result.total}</p>
             </div>
-            <div>
-              <p style={{ fontSize: '1.8rem', fontWeight: '700' }}>{accuracy}%</p>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Accuracy</p>
+            <div className="card" style={{ padding: '22px' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginBottom: '6px' }}>Accuracy</p>
+              <p style={{ fontSize: '2rem', fontWeight: 800 }}>{accuracy}%</p>
+            </div>
+            <div className="card" style={{ padding: '22px' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginBottom: '6px' }}>Recommended target</p>
+              <p style={{ fontSize: '2rem', fontWeight: 800, color: CEFR_COLORS[recommendedTarget] }}>{recommendedTarget}</p>
             </div>
           </div>
         </div>
 
-        {/* Strengths & Weaknesses */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-          <div className="card" style={{ padding: '20px', textAlign: 'left' }}>
-            <p style={{ color: 'var(--success)', fontSize: '0.8rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>💪 Strengths</p>
-            {result.strengths.map((s, i) => (
-              <p key={i} style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '4px' }}>• {s}</p>
-            ))}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '18px', marginBottom: '22px' }}>
+          <div className="card" style={{ padding: '24px' }}>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '14px' }}>Strengths</h2>
+            <div style={{ display: 'grid', gap: '10px' }}>
+              {result.strengths.map((item) => (
+                <div key={item} style={{ padding: '12px 14px', borderRadius: '14px', background: 'rgba(34, 197, 94, 0.1)', color: '#bbf7d0' }}>
+                  {item}
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="card" style={{ padding: '20px', textAlign: 'left' }}>
-            <p style={{ color: 'var(--warning)', fontSize: '0.8rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>🎯 Areas to Improve</p>
-            {result.weaknesses.map((w, i) => (
-              <p key={i} style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '4px' }}>• {w}</p>
-            ))}
+
+          <div className="card" style={{ padding: '24px' }}>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '14px' }}>Weak areas</h2>
+            <div style={{ display: 'grid', gap: '10px' }}>
+              {result.weaknesses.map((item) => (
+                <div key={item} style={{ padding: '12px 14px', borderRadius: '14px', background: 'rgba(234, 179, 8, 0.12)', color: '#fde68a' }}>
+                  {item}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        <button
-          onClick={() => router.push('/select-level')}
-          className="btn-primary animate-pulse-glow"
-          style={{ padding: '16px 48px', fontSize: '1.1rem' }}
-        >
-          Choose Your Target Level →
-        </button>
+        <div className="glass" style={{ borderRadius: '24px', padding: '28px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '18px', alignItems: 'center' }}>
+            <div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+                Next step
+              </p>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '10px' }}>Choose the level you want to reach next.</h2>
+              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+                The recommended step is <strong style={{ color: CEFR_COLORS[recommendedTarget] }}>{recommendedTarget}</strong>. {getDifficulty(currentLevel, recommendedTarget)}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', flexWrap: 'wrap' }}>
+              <button onClick={() => router.push('/placement-test')} className="btn-secondary" style={{ padding: '14px 22px' }}>
+                Retake Test
+              </button>
+              <button onClick={() => router.push('/select-level')} className="btn-primary" style={{ padding: '14px 22px' }}>
+                Choose Target Level
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

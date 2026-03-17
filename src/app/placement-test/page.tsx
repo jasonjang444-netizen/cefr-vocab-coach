@@ -1,77 +1,124 @@
-'use client';
+﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 interface Question {
+  id: number;
   question: string;
   options: string[];
   correctAnswer: number;
   cefrLevel: string;
-  type: string;
+  type: 'meaning' | 'completion' | 'usage';
 }
 
+interface StoredAnswer {
+  questionId: number;
+  selectedAnswer: number;
+}
+
+const typeLabels: Record<Question['type'], string> = {
+  meaning: 'Vocabulary meaning',
+  completion: 'Sentence completion',
+  usage: 'Word usage',
+};
+
 export default function PlacementTestPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
-  const [answers, setAnswers] = useState<number[]>([]);
+  const [answers, setAnswers] = useState<StoredAnswer[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.replace('/login');
+    }
+  }, [router, status]);
 
   useEffect(() => {
     fetch('/api/placement-test')
-      .then((r) => r.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to load test');
+        }
+        return response.json();
+      })
       .then((data) => {
         setQuestions(data.questions);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setError('Could not load the placement test. Please try again.');
+        setLoading(false);
+      });
   }, []);
 
-  const handleNext = () => {
-    if (selectedAnswer === null) return;
-
-    const newAnswers = [...answers, selectedAnswer];
-    setAnswers(newAnswers);
-    setSelectedAnswer(null);
-
-    if (currentQ < questions.length - 1) {
-      setCurrentQ(currentQ + 1);
-    } else {
-      submitTest(newAnswers);
+  const submitTest = async (finalAnswers: StoredAnswer[]) => {
+    const userId = (session?.user as Record<string, unknown> | undefined)?.id;
+    if (!userId) {
+      router.replace('/login');
+      return;
     }
-  };
 
-  const submitTest = async (finalAnswers: number[]) => {
     setSubmitting(true);
-    const userId = (session?.user as Record<string, unknown>)?.id;
+    setError('');
 
     try {
-      const res = await fetch('/api/placement-test', {
+      const response = await fetch('/api/placement-test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, answers: finalAnswers }),
       });
 
-      const data = await res.json();
-      // Store result in session storage for the results page
+      if (!response.ok) {
+        throw new Error('Failed to submit test');
+      }
+
+      const data = await response.json();
       sessionStorage.setItem('placementResult', JSON.stringify(data));
       router.push('/placement-result');
     } catch {
       setSubmitting(false);
+      setError('Could not score the placement test. Please try again.');
     }
   };
 
-  if (loading) {
+  const handleNext = () => {
+    if (selectedAnswer === null || !questions[currentQ]) {
+      return;
+    }
+
+    const nextAnswers = [
+      ...answers,
+      {
+        questionId: questions[currentQ].id,
+        selectedAnswer,
+      },
+    ];
+
+    setAnswers(nextAnswers);
+    setSelectedAnswer(null);
+
+    if (currentQ === questions.length - 1) {
+      void submitTest(nextAnswers);
+      return;
+    }
+
+    setCurrentQ((value) => value + 1);
+  };
+
+  if (loading || status === 'loading') {
     return (
       <div className="bg-grid bg-gradient-radial min-h-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="animate-fade-in" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px' }} className="animate-float">📝</div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>Preparing your placement test...</p>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>Preparing your placement test...</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>20 questions across A1 to C2</p>
         </div>
       </div>
     );
@@ -80,110 +127,130 @@ export default function PlacementTestPage() {
   if (submitting) {
     return (
       <div className="bg-grid bg-gradient-radial min-h-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="animate-fade-in" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px' }} className="animate-float">🧠</div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>Analyzing your results...</p>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>Analyzing your results...</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>We are estimating your current CEFR level and focus areas.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && questions.length === 0) {
+    return (
+      <div className="bg-grid bg-gradient-radial min-h-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <div className="glass" style={{ borderRadius: '24px', padding: '28px', maxWidth: '480px', textAlign: 'center' }}>
+          <p style={{ color: '#fca5a5', marginBottom: '18px' }}>{error}</p>
+          <button onClick={() => window.location.reload()} className="btn-primary" style={{ padding: '14px 24px' }}>
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
   const question = questions[currentQ];
-  const progress = ((currentQ) / questions.length) * 100;
+  const progress = Math.round(((currentQ + 1) / Math.max(1, questions.length)) * 100);
 
   return (
     <div className="bg-grid bg-gradient-radial min-h-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-      <div className="animate-fade-in" style={{ width: '100%', maxWidth: '640px' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '32px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Placement Test</span>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-              Question {currentQ + 1} of {questions.length}
+      <div className="animate-fade-in" style={{ width: '100%', maxWidth: '760px' }}>
+        <div style={{ marginBottom: '22px', display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+          <div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
+              Placement test
+            </p>
+            <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '6px' }}>Find your current CEFR vocabulary level</h1>
+            <p style={{ color: 'var(--text-secondary)' }}>Question {currentQ + 1} of {questions.length}</p>
+          </div>
+          <div style={{ minWidth: '180px' }}>
+            <div className="progress-bar" style={{ height: '10px', marginBottom: '8px' }}>
+              <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'right' }}>{progress}% complete</p>
+          </div>
+        </div>
+
+        <div className="glass" style={{ borderRadius: '26px', padding: '32px' }}>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
+            <span
+              className={`level-${question.cefrLevel.toLowerCase()}`}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '999px',
+                border: '1px solid currentColor',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+              }}
+            >
+              {question.cefrLevel}
+            </span>
+            <span style={{ padding: '6px 12px', borderRadius: '999px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+              {typeLabels[question.type]}
             </span>
           </div>
-          {/* Progress bar */}
-          <div className="progress-bar">
-            <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
+
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 700, lineHeight: 1.5, marginBottom: '24px' }}>{question.question}</h2>
+
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {question.options.map((option, index) => {
+              const isSelected = selectedAnswer === index;
+              return (
+                <button
+                  key={`${question.id}-${option}`}
+                  onClick={() => setSelectedAnswer(index)}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '16px 18px',
+                    borderRadius: '16px',
+                    border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                    background: isSelected ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-secondary)',
+                    color: 'var(--text-primary)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '14px',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '10px',
+                      border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--text-muted)',
+                      color: isSelected ? 'var(--accent-primary)' : 'var(--text-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 700,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {String.fromCharCode(65 + index)}
+                  </span>
+                  <span>{option}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {error && <p style={{ color: '#fca5a5', marginTop: '16px' }}>{error}</p>}
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', marginTop: '28px', flexWrap: 'wrap' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+              The test mixes easier and harder questions to estimate your level more accurately.
+            </p>
+            <button
+              onClick={handleNext}
+              className="btn-primary"
+              style={{ padding: '14px 22px', minWidth: '180px', opacity: selectedAnswer === null ? 0.6 : 1 }}
+              disabled={selectedAnswer === null}
+            >
+              {currentQ === questions.length - 1 ? 'Finish Test' : 'Next Question'}
+            </button>
           </div>
         </div>
-
-        {/* Level indicator */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '100px', border: '1px solid', marginBottom: '20px', fontSize: '0.8rem', fontWeight: '600' }}
-          className={`level-${question?.cefrLevel?.toLowerCase()}`}
-        >
-          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor' }} />
-          {question?.cefrLevel} Level
-        </div>
-
-        {/* Question card */}
-        <div className="glass" style={{ borderRadius: '20px', padding: '36px', marginBottom: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              {question?.type === 'meaning' ? '📖 Vocabulary Meaning' : question?.type === 'completion' ? '✏️ Sentence Completion' : '💡 Word Usage'}
-            </span>
-          </div>
-
-          <h2 style={{ fontSize: '1.3rem', fontWeight: '600', marginBottom: '28px', lineHeight: '1.5' }}>
-            {question?.question}
-          </h2>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {question?.options.map((option, i) => (
-              <button
-                key={i}
-                onClick={() => setSelectedAnswer(i)}
-                style={{
-                  padding: '16px 20px',
-                  borderRadius: '12px',
-                  border: selectedAnswer === i ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                  background: selectedAnswer === i ? 'rgba(99, 102, 241, 0.1)' : 'var(--bg-secondary)',
-                  color: 'var(--text-primary)',
-                  fontSize: '1rem',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                }}
-              >
-                <span style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '8px',
-                  border: selectedAnswer === i ? '2px solid var(--accent-primary)' : '1px solid var(--text-muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '0.8rem',
-                  fontWeight: '600',
-                  color: selectedAnswer === i ? 'var(--accent-primary)' : 'var(--text-muted)',
-                  flexShrink: 0,
-                }}>
-                  {String.fromCharCode(65 + i)}
-                </span>
-                {option}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Next button */}
-        <button
-          onClick={handleNext}
-          className="btn-primary"
-          style={{
-            width: '100%',
-            padding: '16px',
-            fontSize: '1.05rem',
-            opacity: selectedAnswer === null ? 0.5 : 1,
-            cursor: selectedAnswer === null ? 'not-allowed' : 'pointer',
-          }}
-          disabled={selectedAnswer === null}
-        >
-          {currentQ === questions.length - 1 ? 'Finish Test' : 'Next Question →'}
-        </button>
       </div>
     </div>
   );

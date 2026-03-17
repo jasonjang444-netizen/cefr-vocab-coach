@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -25,40 +25,43 @@ model User {
 }
 
 model UserLevel {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  currentCefr     String   @default("A1")
-  targetCefr      String   @default("B1")
-  studyMinutes    Int      @default(20)
-  onboardingDone  Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  currentCefr    String   @default("A1")
+  targetCefr     String   @default("B1")
+  studyMinutes   Int      @default(20)
+  onboardingDone Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model PlacementTestResult {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  level       String
-  score       Int
-  confidence  String
-  strengths   String
-  weaknesses  String
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  level      String
+  score      Int
+  confidence String
+  strengths  String
+  weaknesses String
+  createdAt  DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Vocabulary {
-  id           String   @id @default(cuid())
-  word         String
-  partOfSpeech String
-  meaning      String
-  example      String
-  collocations String
-  cefrLevel    String
-  createdAt    DateTime @default(now())
+  id             String   @id @default(cuid())
+  word           String
+  partOfSpeech   String
+  meaning        String
+  meaningKo      String?
+  example        String
+  exampleKo      String?
+  collocations   String
+  collocationsKo String?
+  cefrLevel      String
+  createdAt      DateTime @default(now())
 
   userProgress UserVocabProgress[]
 }
@@ -81,13 +84,13 @@ model UserVocabProgress {
 }
 
 model StudySession {
-  id           String   @id @default(cuid())
-  userId       String
-  date         DateTime @default(now())
-  wordsStudied Int      @default(0)
-  wordsReviewed Int     @default(0)
-  minutesSpent Int      @default(0)
-  createdAt    DateTime @default(now())
+  id            String   @id @default(cuid())
+  userId        String
+  date          DateTime @default(now())
+  wordsStudied  Int      @default(0)
+  wordsReviewed Int      @default(0)
+  minutesSpent  Int      @default(0)
+  createdAt     DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -106,15 +109,15 @@ model QuizResult {
 }
 
 model StudyPlan {
-  id             String   @id @default(cuid())
-  userId         String   @unique
-  dailyNewWords  Int      @default(10)
-  dailyReview    Int      @default(5)
-  collocations   Int      @default(3)
-  examples       Int      @default(3)
-  miniQuiz       Int      @default(1)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  dailyNewWords Int      @default(10)
+  dailyReview   Int      @default(5)
+  collocations  Int      @default(3)
+  examples      Int      @default(3)
+  miniQuiz      Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
