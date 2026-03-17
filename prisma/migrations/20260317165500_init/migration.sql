@@ -1,0 +1,2 @@
+-- No-op migration.
+-- Consolidated into the PostgreSQL init migration to keep production bootstrapping simple.

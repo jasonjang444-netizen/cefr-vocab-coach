@@ -1,0 +1,2 @@
+-- No-op migration.
+-- Korean vocabulary fields are already included in the initial PostgreSQL migration.
