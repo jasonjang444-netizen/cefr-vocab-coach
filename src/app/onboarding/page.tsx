@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -11,10 +11,19 @@ const onboardingSteps = [
   'Start a personalized vocabulary plan with quizzes, review, and progress tracking.',
 ];
 
+interface OnboardingSnapshot {
+  placementResult: {
+    level: string;
+  } | null;
+}
+
 export default function OnboardingPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const onboardingDone = Boolean((session?.user as Record<string, unknown> | undefined)?.onboardingDone);
+  const userId = (session?.user as Record<string, unknown> | undefined)?.id as string | undefined;
+  const [checkingProgress, setCheckingProgress] = useState(true);
+  const shouldCheckProgress = status === 'authenticated' && !onboardingDone && Boolean(userId);
   const userName =
     session?.user?.name ||
     session?.user?.email?.split('@')[0] ||
@@ -32,10 +41,50 @@ export default function OnboardingPage() {
     }
   }, [onboardingDone, router, status]);
 
-  if (status === 'loading') {
+  useEffect(() => {
+    if (!shouldCheckProgress) {
+      return;
+    }
+
+    let active = true;
+
+    fetch(`/api/dashboard?userId=${userId}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to load onboarding progress');
+        }
+
+        return response.json() as Promise<OnboardingSnapshot>;
+      })
+      .then((data) => {
+        if (!active) {
+          return;
+        }
+
+        if (data.placementResult) {
+          router.replace('/select-level');
+          return;
+        }
+
+        setCheckingProgress(false);
+      })
+      .catch(() => {
+        if (active) {
+          setCheckingProgress(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [router, shouldCheckProgress, userId]);
+
+  if (status === 'loading' || (shouldCheckProgress && checkingProgress)) {
     return (
       <div className="bg-grid bg-gradient-radial min-h-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: 'var(--text-secondary)' }}>Loading your onboarding flow...</p>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          {checkingProgress ? 'Resuming your onboarding...' : 'Loading your onboarding flow...'}
+        </p>
       </div>
     );
   }
