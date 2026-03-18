@@ -1,8 +1,9 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/components/language-context';
 
 interface Question {
   id: number;
@@ -18,14 +19,58 @@ interface StoredAnswer {
   selectedAnswer: number;
 }
 
-const typeLabels: Record<Question['type'], string> = {
-  meaning: 'Vocabulary meaning',
-  completion: 'Sentence completion',
-  usage: 'Word usage',
-};
+const typeLabels = {
+  en: {
+    meaning: 'Vocabulary meaning',
+    completion: 'Sentence completion',
+    usage: 'Word usage',
+  },
+  ko: {
+    meaning: '어휘 의미',
+    completion: '문장 완성',
+    usage: '단어 사용',
+  },
+} as const;
+
+const copyByLanguage = {
+  en: {
+    preparing: 'Preparing your placement test...',
+    preparingSub: '20 questions across A1 to C2',
+    analyzing: 'Analyzing your results...',
+    analyzingSub: 'We are estimating your current CEFR level and focus areas.',
+    retry: 'Try Again',
+    retryError: 'Could not load the placement test. Please try again.',
+    submitError: 'Could not score the placement test. Please try again.',
+    section: 'Placement test',
+    title: 'Find your current CEFR vocabulary level',
+    question: (current: number, total: number) => `Question ${current} of ${total}`,
+    complete: (progress: number) => `${progress}% complete`,
+    footer: 'The test mixes easier and harder questions to estimate your level more accurately.',
+    finish: 'Finish Test',
+    next: 'Next Question',
+  },
+  ko: {
+    preparing: '레벨 테스트를 준비하는 중입니다...',
+    preparingSub: 'A1부터 C2까지 총 20문항',
+    analyzing: '결과를 분석하는 중입니다...',
+    analyzingSub: '현재 CEFR 레벨과 집중해야 할 영역을 계산하고 있어요.',
+    retry: '다시 시도하기',
+    retryError: '레벨 테스트를 불러오지 못했습니다. 다시 시도해주세요.',
+    submitError: '레벨 테스트 채점에 실패했습니다. 다시 시도해주세요.',
+    section: '레벨 테스트',
+    title: '현재 CEFR 어휘 레벨 찾기',
+    question: (current: number, total: number) => `${total}문항 중 ${current}번`,
+    complete: (progress: number) => `${progress}% 완료`,
+    footer: '더 정확한 레벨 추정을 위해 쉬운 문항과 어려운 문항이 함께 섞여 있습니다.',
+    finish: '테스트 완료',
+    next: '다음 문항',
+  },
+} as const;
 
 export default function PlacementTestPage() {
   const { data: session, status } = useSession();
+  const { language } = useLanguage();
+  const ui = copyByLanguage[language];
   const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
@@ -54,10 +99,10 @@ export default function PlacementTestPage() {
         setLoading(false);
       })
       .catch(() => {
-        setError('Could not load the placement test. Please try again.');
+        setError(ui.retryError);
         setLoading(false);
       });
-  }, []);
+  }, [ui.retryError]);
 
   const submitTest = async (finalAnswers: StoredAnswer[]) => {
     const userId = (session?.user as Record<string, unknown> | undefined)?.id;
@@ -85,7 +130,7 @@ export default function PlacementTestPage() {
       router.push('/placement-result');
     } catch {
       setSubmitting(false);
-      setError('Could not score the placement test. Please try again.');
+      setError(ui.submitError);
     }
   };
 
@@ -117,8 +162,8 @@ export default function PlacementTestPage() {
     return (
       <div className="bg-grid bg-gradient-radial min-h-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>Preparing your placement test...</p>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>20 questions across A1 to C2</p>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>{ui.preparing}</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{ui.preparingSub}</p>
         </div>
       </div>
     );
@@ -128,8 +173,8 @@ export default function PlacementTestPage() {
     return (
       <div className="bg-grid bg-gradient-radial min-h-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>Analyzing your results...</p>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>We are estimating your current CEFR level and focus areas.</p>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>{ui.analyzing}</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{ui.analyzingSub}</p>
         </div>
       </div>
     );
@@ -141,7 +186,7 @@ export default function PlacementTestPage() {
         <div className="glass" style={{ borderRadius: '24px', padding: '28px', maxWidth: '480px', textAlign: 'center' }}>
           <p style={{ color: '#fca5a5', marginBottom: '18px' }}>{error}</p>
           <button onClick={() => window.location.reload()} className="btn-primary" style={{ padding: '14px 24px' }}>
-            Try Again
+            {ui.retry}
           </button>
         </div>
       </div>
@@ -157,16 +202,16 @@ export default function PlacementTestPage() {
         <div style={{ marginBottom: '22px', display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
-              Placement test
+              {ui.section}
             </p>
-            <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '6px' }}>Find your current CEFR vocabulary level</h1>
-            <p style={{ color: 'var(--text-secondary)' }}>Question {currentQ + 1} of {questions.length}</p>
+            <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '6px' }}>{ui.title}</h1>
+            <p style={{ color: 'var(--text-secondary)' }}>{ui.question(currentQ + 1, questions.length)}</p>
           </div>
           <div style={{ minWidth: '180px' }}>
             <div className="progress-bar" style={{ height: '10px', marginBottom: '8px' }}>
               <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
             </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'right' }}>{progress}% complete</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'right' }}>{ui.complete(progress)}</p>
           </div>
         </div>
 
@@ -185,7 +230,7 @@ export default function PlacementTestPage() {
               {question.cefrLevel}
             </span>
             <span style={{ padding: '6px 12px', borderRadius: '999px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
-              {typeLabels[question.type]}
+              {typeLabels[language][question.type]}
             </span>
           </div>
 
@@ -238,16 +283,14 @@ export default function PlacementTestPage() {
           {error && <p style={{ color: '#fca5a5', marginTop: '16px' }}>{error}</p>}
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', marginTop: '28px', flexWrap: 'wrap' }}>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-              The test mixes easier and harder questions to estimate your level more accurately.
-            </p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{ui.footer}</p>
             <button
               onClick={handleNext}
               className="btn-primary"
               style={{ padding: '14px 22px', minWidth: '180px', opacity: selectedAnswer === null ? 0.6 : 1 }}
               disabled={selectedAnswer === null}
             >
-              {currentQ === questions.length - 1 ? 'Finish Test' : 'Next Question'}
+              {currentQ === questions.length - 1 ? ui.finish : ui.next}
             </button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
@@ -12,6 +12,7 @@ import {
   getRecommendedTarget,
   normalizeCefrLevel,
 } from '@/lib/cefr';
+import { useLanguage } from '@/components/language-context';
 
 interface DashboardSnapshot {
   userLevel: {
@@ -20,8 +21,46 @@ interface DashboardSnapshot {
   } | null;
 }
 
+const copyByLanguage = {
+  en: {
+    loading: 'Loading your target options...',
+    step: 'Step 2 of onboarding',
+    title: 'What level do you want to reach?',
+    recommendedLead: 'Your current level is',
+    recommend: 'We recommend aiming for',
+    stretch:
+      ', but you can set a bigger stretch goal if you want a longer-term challenge.',
+    currentLevel: 'Current level',
+    recommended: 'Recommended',
+    belowCurrent: 'Below current',
+    available: 'Available',
+    difficulty: 'Goal difficulty',
+    back: 'Back to Result',
+    continue: 'Continue to Study Plan',
+    saving: 'Saving Target...',
+  },
+  ko: {
+    loading: '목표 레벨 옵션을 불러오는 중입니다...',
+    step: '온보딩 2단계',
+    title: '어느 레벨까지 도달하고 싶나요?',
+    recommendedLead: '현재 레벨은',
+    recommend: '추천 목표는',
+    stretch: '이지만, 더 긴 도전을 원한다면 더 높은 목표도 선택할 수 있어요.',
+    currentLevel: '현재 레벨',
+    recommended: '추천',
+    belowCurrent: '현재보다 낮음',
+    available: '선택 가능',
+    difficulty: '목표 난이도',
+    back: '결과로 돌아가기',
+    continue: '학습 플랜으로 이동',
+    saving: '목표 저장 중...',
+  },
+} as const;
+
 export default function SelectLevelPage() {
   const { data: session, status } = useSession();
+  const { language } = useLanguage();
+  const ui = copyByLanguage[language];
   const router = useRouter();
   const [currentLevel, setCurrentLevel] = useState<'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'>('A1');
   const [selectedLevel, setSelectedLevel] = useState<string>('');
@@ -94,7 +133,7 @@ export default function SelectLevelPage() {
   if (status === 'loading' || !hydrated) {
     return (
       <div className="bg-grid bg-gradient-radial min-h-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: 'var(--text-secondary)' }}>Loading your target options...</p>
+        <p style={{ color: 'var(--text-secondary)' }}>{ui.loading}</p>
       </div>
     );
   }
@@ -106,11 +145,14 @@ export default function SelectLevelPage() {
       <div className="animate-fade-in" style={{ width: '100%', maxWidth: '860px' }}>
         <div className="glass" style={{ borderRadius: '28px', padding: '34px', marginBottom: '20px' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
-            Step 2 of onboarding
+            {ui.step}
           </p>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '10px' }}>What level do you want to reach?</h1>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '10px' }}>{ui.title}</h1>
           <p style={{ color: 'var(--text-secondary)', maxWidth: '720px' }}>
-            Your current level is <strong style={{ color: CEFR_COLORS[currentLevel] }}>{currentLevel}</strong> ({CEFR_DESCRIPTIONS[currentLevel]}). We recommend aiming for <strong style={{ color: CEFR_COLORS[recommendedLevel] }}>{recommendedLevel}</strong>, but you can set a bigger stretch goal if you want a longer-term challenge.
+            {ui.recommendedLead}{' '}
+            <strong style={{ color: CEFR_COLORS[currentLevel] }}>{currentLevel}</strong> ({CEFR_DESCRIPTIONS[currentLevel]}). {ui.recommend}{' '}
+            <strong style={{ color: CEFR_COLORS[recommendedLevel] }}>{recommendedLevel}</strong>
+            {ui.stretch}
           </p>
         </div>
 
@@ -138,7 +180,7 @@ export default function SelectLevelPage() {
                 <div style={{ fontSize: '1.8rem', fontWeight: 800, color: CEFR_COLORS[level], marginBottom: '4px' }}>{level}</div>
                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', minHeight: '38px' }}>{CEFR_DESCRIPTIONS[level]}</div>
                 <div style={{ marginTop: '10px', minHeight: '18px', fontSize: '0.72rem', color: isRecommended ? CEFR_COLORS[level] : 'var(--text-muted)', fontWeight: 700 }}>
-                  {isCurrent ? 'Current level' : isRecommended ? 'Recommended' : isBelowCurrent ? 'Below current' : 'Available'}
+                  {isCurrent ? ui.currentLevel : isRecommended ? ui.recommended : isBelowCurrent ? ui.belowCurrent : ui.available}
                 </div>
               </button>
             );
@@ -149,7 +191,7 @@ export default function SelectLevelPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '18px', alignItems: 'center' }}>
             <div>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
-                Goal difficulty
+                {ui.difficulty}
               </p>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '8px' }}>
                 {currentLevel} to {selectedLevel || recommendedLevel}
@@ -161,10 +203,10 @@ export default function SelectLevelPage() {
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', flexWrap: 'wrap' }}>
               <button onClick={() => router.push('/placement-result')} className="btn-secondary" style={{ padding: '14px 22px' }}>
-                Back to Result
+                {ui.back}
               </button>
               <button onClick={handleContinue} className="btn-primary" style={{ padding: '14px 22px' }} disabled={!selectedLevel || loading}>
-                {loading ? 'Saving Target...' : 'Continue to Study Plan'}
+                {loading ? ui.saving : ui.continue}
               </button>
             </div>
           </div>

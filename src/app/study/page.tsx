@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { CEFR_COLORS, CefrLevel } from '@/lib/cefr';
-
-type StudyLanguage = 'en' | 'ko';
+import { useLanguage } from '@/components/language-context';
 
 interface VocabItem {
   id: string;
@@ -74,13 +73,13 @@ const copyByLanguage = {
 
 export default function StudyPage() {
   const { data: session, status } = useSession();
+  const { language } = useLanguage();
   const [vocabulary, setVocabulary] = useState<VocabItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showMeaning, setShowMeaning] = useState(false);
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
   const [studied, setStudied] = useState(0);
-  const [language, setLanguage] = useState<StudyLanguage>('en');
 
   useEffect(() => {
     const userId = (session?.user as Record<string, unknown> | undefined)?.id;
@@ -141,9 +140,11 @@ export default function StudyPage() {
     return (
       <div className="bg-grid bg-gradient-radial min-h-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
         <div className="glass" style={{ borderRadius: '24px', padding: '28px', maxWidth: '520px', textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '18px' }}>Please log in to continue your study session.</p>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '18px' }}>
+            {language === 'ko' ? '학습을 계속하려면 로그인해주세요.' : 'Please log in to continue your study session.'}
+          </p>
           <Link href="/login" className="btn-primary" style={{ textDecoration: 'none', padding: '14px 22px' }}>
-            Log In
+            {language === 'ko' ? '로그인' : 'Log In'}
           </Link>
         </div>
       </div>
@@ -191,32 +192,7 @@ export default function StudyPage() {
             <p style={{ color: 'var(--text-secondary)' }}>{currentIndex + 1} / {vocabulary.length}</p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{ui.bilingualHint}</span>
-            <div className="card" style={{ padding: '6px', display: 'flex', gap: '6px', borderRadius: '999px' }}>
-              {(['en', 'ko'] as const).map((value) => {
-                const selected = language === value;
-                return (
-                  <button
-                    key={value}
-                    onClick={() => setLanguage(value)}
-                    style={{
-                      border: 'none',
-                      background: selected ? 'var(--accent-gradient)' : 'transparent',
-                      color: 'white',
-                      padding: '8px 14px',
-                      borderRadius: '999px',
-                      cursor: 'pointer',
-                      fontWeight: 700,
-                      fontSize: '0.82rem',
-                    }}
-                  >
-                    {value === 'en' ? ui.languageEnglish : ui.languageKorean}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{ui.bilingualHint}</span>
         </div>
 
         <div className="progress-bar" style={{ marginBottom: '24px', height: '10px' }}>
