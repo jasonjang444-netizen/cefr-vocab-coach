@@ -1,17 +1,25 @@
 ﻿import { NextResponse } from 'next/server';
-import { VOCABULARY_BANK } from '@/lib/vocabulary-data';
+import { VOCABULARY_BANK, VOCABULARY_WORKBOOK_OVERRIDES } from '@/lib/vocabulary-data';
 import { prisma } from '@/lib/prisma';
 
 const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
+const getWorkbookOverride = (word: string) => VOCABULARY_WORKBOOK_OVERRIDES[word.toLowerCase()];
+
 const toVocabularyRecord = (item: (typeof VOCABULARY_BANK)[number]) => ({
+  ...(() => {
+    const workbookOverride = getWorkbookOverride(item.word);
+
+    return {
+      meaningKo: workbookOverride?.meaningKo ?? item.meaningKo,
+      example: workbookOverride?.example || item.example,
+      exampleKo: workbookOverride?.exampleKo ?? item.exampleKo,
+      collocations: workbookOverride?.collocations || item.collocations.join(', '),
+    };
+  })(),
   word: item.word,
   partOfSpeech: item.partOfSpeech,
   meaning: item.meaning,
-  meaningKo: item.meaningKo,
-  example: item.example,
-  exampleKo: item.exampleKo,
-  collocations: item.collocations.join(', '),
   collocationsKo: item.collocationsKo?.join(', '),
   cefrLevel: item.cefrLevel,
 });
@@ -73,7 +81,23 @@ export async function GET(request: Request) {
           })()
         : vocabulary;
 
-    const shuffled = [...studyVocabulary].sort(() => Math.random() - 0.5);
+    const vocabularyWithWorkbookData = studyVocabulary.map((item) => {
+      const workbookOverride = getWorkbookOverride(item.word);
+
+      if (!workbookOverride) {
+        return item;
+      }
+
+      return {
+        ...item,
+        meaningKo: workbookOverride.meaningKo || item.meaningKo,
+        example: workbookOverride.example || item.example,
+        exampleKo: workbookOverride.exampleKo || item.exampleKo,
+        collocations: workbookOverride.collocations || item.collocations,
+      };
+    });
+
+    const shuffled = [...vocabularyWithWorkbookData].sort(() => Math.random() - 0.5);
     const result = mode === 'study' ? shuffled.slice(0, 10) : shuffled;
 
     return NextResponse.json({ vocabulary: result });

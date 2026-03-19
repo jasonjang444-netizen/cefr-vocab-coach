@@ -11,6 +11,13 @@ export interface VocabWord {
   cefrLevel: string;
 }
 
+export interface WorkbookVocabOverride {
+  meaningKo: string;
+  example: string;
+  exampleKo: string;
+  collocations: string;
+}
+
 export const VOCABULARY_BANK: VocabWord[] = [
   // ==================== A1 Words (25) ====================
   { word: 'hello', partOfSpeech: 'interjection', meaning: 'a greeting used when meeting someone', example: 'Hello! How are you today?', collocations: ['say hello', 'hello there', 'hello everyone'], cefrLevel: 'A1' },
@@ -174,6 +181,633 @@ export const VOCABULARY_BANK: VocabWord[] = [
   { word: 'sycophant', partOfSpeech: 'noun', meaning: 'a person who acts obsequiously to gain advantage', example: 'The boss was surrounded by sycophants who never challenged him.', collocations: ['political sycophant', 'mere sycophant', 'sycophantic behavior'], cefrLevel: 'C2' },
   { word: 'verisimilitude', partOfSpeech: 'noun', meaning: 'the appearance of being true or real', example: 'The novel achieves verisimilitude through detailed historical research.', collocations: ['achieve verisimilitude', 'air of verisimilitude', 'sense of verisimilitude'], cefrLevel: 'C2' },
 ];
+
+export const VOCABULARY_WORKBOOK_OVERRIDES: Record<string, WorkbookVocabOverride> = JSON.parse(String.raw`{
+  "family": {
+    "meaningKo": "가족",
+    "example": "I have a large family.",
+    "exampleKo": "나는 대가족이 있습니다.",
+    "collocations": "a large family, family members"
+  },
+  "friend": {
+    "meaningKo": "친구",
+    "example": "He is my best friend.",
+    "exampleKo": "그는 나의 가장 친한 친구입니다.",
+    "collocations": "a best friend, a good friend"
+  },
+  "teacher": {
+    "meaningKo": "선생님",
+    "example": "I like my English teacher.",
+    "exampleKo": "나는 영어 선생님을 좋아해요.",
+    "collocations": "an English teacher, a good teacher"
+  },
+  "food": {
+    "meaningKo": "음식",
+    "example": "I don't eat fast food.",
+    "exampleKo": "나는 패스트 푸드를 먹지 않습니다.",
+    "collocations": "fast food, healthy food"
+  },
+  "water": {
+    "meaningKo": "물",
+    "example": "Can I have some water?",
+    "exampleKo": "물 좀 주시겠어요?",
+    "collocations": ""
+  },
+  "house": {
+    "meaningKo": "집",
+    "example": "They live in a big house.",
+    "exampleKo": "그들은 큰 집에 산다.",
+    "collocations": "a big house"
+  },
+  "school": {
+    "meaningKo": "학교",
+    "example": "I walk to school.",
+    "exampleKo": "나는 학교에 걸어간다.",
+    "collocations": "walk to school, go to school"
+  },
+  "morning": {
+    "meaningKo": "아침",
+    "example": "I drink coffee every morning.",
+    "exampleKo": "나는 매일 아침 커피를 마신다.",
+    "collocations": "in the morning, this morning, tomorrow morning"
+  },
+  "time": {
+    "meaningKo": "시간",
+    "example": "What time is it?",
+    "exampleKo": "지금은 몇시입니까?",
+    "collocations": "have a good time, free time"
+  },
+  "mistake": {
+    "meaningKo": "실수",
+    "example": "I made a mistake.",
+    "exampleKo": "제가 실수를 했습니다.",
+    "collocations": "make a mistake"
+  },
+  "practice": {
+    "meaningKo": "관행",
+    "example": "I need speaking practice.",
+    "exampleKo": "말하기 연습이 필요해요.",
+    "collocations": ""
+  },
+  "work": {
+    "meaningKo": "일하다",
+    "example": "I start work at 9 o'clock.",
+    "exampleKo": "나는 9시에 일을 시작합니다.",
+    "collocations": "start work, go to work"
+  },
+  "book": {
+    "meaningKo": "책",
+    "example": "I am reading a book about pirates.",
+    "exampleKo": "나는 해적에 관한 책을 읽고 있어요.",
+    "collocations": ""
+  },
+  "money": {
+    "meaningKo": "돈",
+    "example": "Do you have money?",
+    "exampleKo": "돈이 있나요?",
+    "collocations": "spend money, save money"
+  },
+  "car": {
+    "meaningKo": "자동차",
+    "example": "I drive a blue car to work every day.",
+    "exampleKo": "나는 매일 파란 차를 타고 출근한다.",
+    "collocations": "drive a car, by car"
+  },
+  "journey": {
+    "meaningKo": "여행",
+    "example": "The journey to Bexley is long.",
+    "exampleKo": "Bexley까지의 여정은 길다.",
+    "collocations": ""
+  },
+  "happy": {
+    "meaningKo": "행복하다",
+    "example": "Happy birthday to you!",
+    "exampleKo": "생일 축하해요!",
+    "collocations": "happy birthday, feel happy"
+  },
+  "cold": {
+    "meaningKo": "추운",
+    "example": "I need a coat for the cold weather.",
+    "exampleKo": "추운 날씨에 코트가 필요해요.",
+    "collocations": "cold weather, a cold drink"
+  },
+  "small": {
+    "meaningKo": "작은",
+    "example": "My grandmother lives in a small flat near the river.",
+    "exampleKo": "우리 할머니는 강 근처의 작은 아파트에 살고 있어요.",
+    "collocations": ""
+  },
+  "dangerous": {
+    "meaningKo": "위험한",
+    "example": "It is dangerous to swim here.",
+    "exampleKo": "여기서 수영하는 것은 위험합니다.",
+    "collocations": ""
+  },
+  "good": {
+    "meaningKo": "좋은",
+    "example": "That is a good idea.",
+    "exampleKo": "좋은 생각이에요.",
+    "collocations": "good idea, good luck"
+  },
+  "important": {
+    "meaningKo": "중요한",
+    "example": "It is important to listen.",
+    "exampleKo": "듣는 것이 중요합니다.",
+    "collocations": "important to do something, an important person"
+  },
+  "open": {
+    "meaningKo": "열려 있는",
+    "example": "The shop is open until 9pm.",
+    "exampleKo": "가게는 저녁 9시까지 영업합니다.",
+    "collocations": ""
+  },
+  "today": {
+    "meaningKo": "오늘",
+    "example": "What are you doing today?",
+    "exampleKo": "오늘 뭐해?",
+    "collocations": ""
+  },
+  "recipe": {
+    "meaningKo": "레시피",
+    "example": "Follow the recipe.",
+    "exampleKo": "조리법을 따르십시오.",
+    "collocations": "follow a recipe"
+  },
+  "benefit": {
+    "meaningKo": "혜택",
+    "example": "Exercise has many benefits.",
+    "exampleKo": "운동에는 많은 이점이 있습니다.",
+    "collocations": ""
+  },
+  "experience": {
+    "meaningKo": "경험",
+    "example": "I have three years' experience.",
+    "exampleKo": "나는 3년의 경험을 가지고 있습니다.",
+    "collocations": ""
+  },
+  "accident": {
+    "meaningKo": "사고",
+    "example": "He had an accident.",
+    "exampleKo": "그는 사고를 당했습니다.",
+    "collocations": "have an accident, car accident"
+  },
+  "temperature": {
+    "meaningKo": "온도",
+    "example": "The doctor took my temperature.",
+    "exampleKo": "의사가 내 체온을 재더군요.",
+    "collocations": "take a temperature, high temperature"
+  },
+  "adventure": {
+    "meaningKo": "모험",
+    "example": "It was a big adventure.",
+    "exampleKo": "그것은 큰 모험이었습니다.",
+    "collocations": "go on an adventure"
+  },
+  "comfortable": {
+    "meaningKo": "편안한",
+    "example": "This is a very comfortable chair.",
+    "exampleKo": "이것은 매우 편안한 의자입니다.",
+    "collocations": "a comfortable chair/bed"
+  },
+  "polite": {
+    "meaningKo": "예의 바른",
+    "example": "It is polite to say thanks.",
+    "exampleKo": "감사하다고 말하는 것이 예의입니다.",
+    "collocations": "polite to"
+  },
+  "brilliant": {
+    "meaningKo": "멋진",
+    "example": "That is a brilliant idea.",
+    "exampleKo": "정말 좋은 생각이에요.",
+    "collocations": "brilliant idea"
+  },
+  "typical": {
+    "meaningKo": "전형적인",
+    "example": "It was a typical day.",
+    "exampleKo": "전형적인 날이었습니다.",
+    "collocations": "typical day"
+  },
+  "especially": {
+    "meaningKo": "특히",
+    "example": "I love Italian food, especially pasta.",
+    "exampleKo": "나는 이탈리아 음식, 특히 파스타를 좋아합니다.",
+    "collocations": ""
+  },
+  "volunteer": {
+    "meaningKo": "자원 봉사자",
+    "example": "He works as a volunteer at the hospital.",
+    "exampleKo": "그는 병원에서 자원봉사자로 일하고 있다.",
+    "collocations": "work as a volunteer"
+  },
+  "environment": {
+    "meaningKo": "환경",
+    "example": "We must protect the environment.",
+    "exampleKo": "우리는 환경을 보호해야 합니다.",
+    "collocations": "protect the environment"
+  },
+  "attitude": {
+    "meaningKo": "태도",
+    "example": "He has a positive attitude to life.",
+    "exampleKo": "그는 삶에 대해 긍정적인 태도를 가지고 있습니다.",
+    "collocations": ""
+  },
+  "generation": {
+    "meaningKo": "세대",
+    "example": "I think the young generation gets too much criticism.",
+    "exampleKo": "젊은 세대가 너무 비난을 많이 받는 것 같아요.",
+    "collocations": ""
+  },
+  "influence": {
+    "meaningKo": "영향",
+    "example": "My parents had a big influence on me.",
+    "exampleKo": "부모님은 나에게 큰 영향을 미쳤습니다.",
+    "collocations": ""
+  },
+  "opportunity": {
+    "meaningKo": "기회",
+    "example": "It is a great opportunity.",
+    "exampleKo": "좋은 기회입니다.",
+    "collocations": ""
+  },
+  "aware": {
+    "meaningKo": "알고 있는",
+    "example": "Are you aware of the rules?",
+    "exampleKo": "규칙을 알고 있나요?",
+    "collocations": ""
+  },
+  "reliable": {
+    "meaningKo": "믿을 수 있는",
+    "example": "He is a very reliable worker.",
+    "exampleKo": "그는 매우 믿음직한 일꾼이다.",
+    "collocations": ""
+  },
+  "responsible": {
+    "meaningKo": "책임이 있는",
+    "example": "Who is responsible for this mess?",
+    "exampleKo": "이 혼란의 책임은 누구에게 있습니까?",
+    "collocations": ""
+  },
+  "essential": {
+    "meaningKo": "필수적인",
+    "example": "Water is essential for life.",
+    "exampleKo": "물은 생명에 필수적입니다.",
+    "collocations": ""
+  },
+  "obvious": {
+    "meaningKo": "분명한",
+    "example": "The answer was obvious to everyone.",
+    "exampleKo": "대답은 누구에게나 명백했습니다.",
+    "collocations": ""
+  },
+  "controversy": {
+    "meaningKo": "논쟁",
+    "example": "The decision caused a great deal of controversy.",
+    "exampleKo": "이 결정은 많은 논란을 불러일으켰다.",
+    "collocations": "cause controversy, a subject of controversy"
+  },
+  "demand": {
+    "meaningKo": "수요",
+    "example": "There is a high demand for skilled workers in the tech industry.",
+    "exampleKo": "기술 산업에는 숙련된 인력에 대한 수요가 높습니다.",
+    "collocations": "high demand, meet demand, supply and demand"
+  },
+  "consequence": {
+    "meaningKo": "결과",
+    "example": "You must accept the consequences of your actions.",
+    "exampleKo": "당신은 당신의 행동의 결과를 받아들여야 합니다.",
+    "collocations": "consequences of, serious consequences"
+  },
+  "phenomenon": {
+    "meaningKo": "현상",
+    "example": "Globalisation is a relatively new phenomenon.",
+    "exampleKo": "세계화는 비교적 새로운 현상입니다.",
+    "collocations": "natural phenomenon, a recent phenomenon"
+  },
+  "sophisticated": {
+    "meaningKo": "정교한",
+    "example": "The organisation uses sophisticated technology to monitor emissions.",
+    "exampleKo": "조직은 정교한 기술을 사용하여 배출량을 모니터링합니다.",
+    "collocations": ""
+  },
+  "comprehensive": {
+    "meaningKo": "포괄적인",
+    "example": "The government published a comprehensive review of immigration policy.",
+    "exampleKo": "정부는 이민 정책에 대한 종합적인 검토를 발표했습니다.",
+    "collocations": "comprehensive review"
+  },
+  "fundamental": {
+    "meaningKo": "근본적인",
+    "example": "The report identified fundamental flaws in the current system.",
+    "exampleKo": "보고서는 현재 시스템의 근본적인 결함을 식별했습니다.",
+    "collocations": "fundamental flaw/difference"
+  },
+  "significant": {
+    "meaningKo": "중요한",
+    "example": "The study revealed a significant correlation between variables.",
+    "exampleKo": "이 연구에서는 변수들 사이에 유의미한 상관관계가 있음이 밝혀졌습니다.",
+    "collocations": "significant correlation"
+  },
+  "contemporary": {
+    "meaningKo": "현대의",
+    "example": "The museum features an exhibition of contemporary art.",
+    "exampleKo": "박물관에서는 현대 미술을 전시하고 있습니다.",
+    "collocations": ""
+  },
+  "inevitable": {
+    "meaningKo": "불가피한",
+    "example": "Many analysts believe that further regulation is inevitable.",
+    "exampleKo": "많은 분석가들은 추가 규제가 불가피하다고 믿고 있습니다.",
+    "collocations": ""
+  },
+  "flexible": {
+    "meaningKo": "유연한",
+    "example": "Employers increasingly offer flexible working arrangements.",
+    "exampleKo": "고용주들은 점점 더 유연한 근무 방식을 제공하고 있습니다.",
+    "collocations": "flexible working"
+  },
+  "acquisition": {
+    "meaningKo": "인수",
+    "example": "The company announced the acquisition of a rival firm.",
+    "exampleKo": "회사는 경쟁사 인수를 발표했습니다.",
+    "collocations": ""
+  },
+  "hypothesis": {
+    "meaningKo": "가설",
+    "example": "The researchers will now test this hypothesis in a controlled experiment.",
+    "exampleKo": "이제 연구자들은 통제된 실험을 통해 이 가설을 테스트할 예정입니다.",
+    "collocations": "test a hypothesis, support a hypothesis"
+  },
+  "advocate": {
+    "meaningKo": "지지하다",
+    "example": "She became a passionate advocate for educational reform.",
+    "exampleKo": "그녀는 교육 개혁을 열정적으로 옹호하는 사람이 되었습니다.",
+    "collocations": ""
+  },
+  "scrutiny": {
+    "meaningKo": "정밀한 조사",
+    "example": "The government's actions came under public scrutiny.",
+    "exampleKo": "정부의 조치는 대중의 감시를 받았다.",
+    "collocations": "public scrutiny, under scrutiny"
+  },
+  "constraint": {
+    "meaningKo": "강제",
+    "example": "Budget constraints limited their options.",
+    "exampleKo": "예산 제약으로 인해 옵션이 제한되었습니다.",
+    "collocations": "budget constraints, time constraints"
+  },
+  "dilemma": {
+    "meaningKo": "양도 논법",
+    "example": "The situation posed a profound ethical dilemma.",
+    "exampleKo": "상황은 심각한 윤리적 딜레마를 야기했습니다.",
+    "collocations": "ethical dilemma"
+  },
+  "inherent": {
+    "meaningKo": "고유의",
+    "example": "There are inherent risks in any business venture.",
+    "exampleKo": "모든 사업에는 위험이 내재되어 있습니다.",
+    "collocations": "inherent risk, inherent problem"
+  },
+  "legitimate": {
+    "meaningKo": "정당한",
+    "example": "That's a legitimate concern.",
+    "exampleKo": "그것은 정당한 우려입니다.",
+    "collocations": "legitimate concern, legitimate question"
+  },
+  "preliminary": {
+    "meaningKo": "예비의",
+    "example": "The preliminary results look promising.",
+    "exampleKo": "예비 결과는 유망해 보입니다.",
+    "collocations": ""
+  },
+  "notorious": {
+    "meaningKo": "유명한",
+    "example": "The area is notorious for crime.",
+    "exampleKo": "이 지역은 범죄로 악명이 높습니다.",
+    "collocations": ""
+  },
+  "reluctant": {
+    "meaningKo": "주저하는",
+    "example": "He was reluctant to discuss the matter.",
+    "exampleKo": "그는 그 문제에 대해 논의하기를 꺼렸다.",
+    "collocations": ""
+  },
+  "elaborate": {
+    "meaningKo": "정교한",
+    "example": "They created an elaborate plan.",
+    "exampleKo": "그들은 정교한 계획을 세웠습니다.",
+    "collocations": ""
+  },
+  "unprecedented": {
+    "meaningKo": "전례 없는",
+    "example": "The floods were on an unprecedented scale.",
+    "exampleKo": "홍수는 전례 없는 규모였습니다.",
+    "collocations": "unprecedented level, unprecedented scale"
+  },
+  "sycophant": {
+    "meaningKo": "아첨꾼",
+    "example": "The dictator was surrounded by fawning sycophants who agreed with his every word.",
+    "exampleKo": "독재자는 그의 모든 말에 동의하는 아첨하는 아첨꾼들에 둘러싸여 있었습니다.",
+    "collocations": ""
+  },
+  "paradox": {
+    "meaningKo": "역설",
+    "example": "It is one of the great paradoxes of life that we must work hard to relax.",
+    "exampleKo": "긴장을 풀기 위해 열심히 노력해야 한다는 것은 인생의 가장 큰 역설 중 하나입니다.",
+    "collocations": ""
+  },
+  "repercussion": {
+    "meaningKo": "반향",
+    "example": "The scandal had serious repercussions for his political career.",
+    "exampleKo": "이 스캔들은 그의 정치 경력에 심각한 영향을 미쳤다.",
+    "collocations": ""
+  },
+  "vicissitude": {
+    "meaningKo": "변천",
+    "example": "Despite the many vicissitudes of life, they remained optimistic.",
+    "exampleKo": "삶의 많은 우여곡절에도 불구하고 그들은 낙관적인 태도를 유지했습니다.",
+    "collocations": ""
+  },
+  "equanimity": {
+    "meaningKo": "평정",
+    "example": "She accepted the unexpected news with remarkable equanimity.",
+    "exampleKo": "그녀는 뜻밖의 소식을 놀랍도록 침착하게 받아들였습니다.",
+    "collocations": "with equanimity"
+  },
+  "propensity": {
+    "meaningKo": "경향",
+    "example": "She has a propensity for making careless mistakes.",
+    "exampleKo": "그녀는 부주의한 실수를 저지르는 경향이 있습니다.",
+    "collocations": ""
+  },
+  "verisimilitude": {
+    "meaningKo": "있을 법함",
+    "example": "The novel's historical verisimilitude was praised by critics.",
+    "exampleKo": "소설의 역사적 진실성은 비평가들로부터 칭찬을 받았습니다.",
+    "collocations": ""
+  },
+  "discrepancy": {
+    "meaningKo": "모순",
+    "example": "There is a significant discrepancy between the two sets of accounts.",
+    "exampleKo": "두 계정 세트 간에는 상당한 차이가 있습니다.",
+    "collocations": ""
+  },
+  "magnanimous": {
+    "meaningKo": "도량이 큰",
+    "example": "It was a magnanimous gesture for him to forgive his rival.",
+    "exampleKo": "그의 경쟁자를 용서하는 것은 그가 관대한 몸짓이었습니다.",
+    "collocations": "magnanimous gesture, magnanimous in victory"
+  },
+  "meticulous": {
+    "meaningKo": "꼼꼼한",
+    "example": "The project required meticulous attention to detail.",
+    "exampleKo": "이 프로젝트는 세부 사항에 세심한 주의가 필요했습니다.",
+    "collocations": "meticulous attention to detail"
+  },
+  "perspicacious": {
+    "meaningKo": "통찰력 있는",
+    "example": "Her perspicacious analysis revealed flaws others had missed.",
+    "exampleKo": "그녀의 통찰력 있는 분석은 다른 사람들이 놓친 결함을 밝혀냈습니다.",
+    "collocations": "perspicacious analysis"
+  },
+  "quintessential": {
+    "meaningKo": "전형적인",
+    "example": "This novel is the quintessential example of his early style.",
+    "exampleKo": "이 소설은 그의 초기 스타일의 전형적인 예이다.",
+    "collocations": "quintessential example"
+  },
+  "resilient": {
+    "meaningKo": "탄력있는",
+    "example": "Children are remarkably resilient to change.",
+    "exampleKo": "아이들은 변화에 놀라울 정도로 탄력적입니다.",
+    "collocations": ""
+  },
+  "sagacious": {
+    "meaningKo": "현명한",
+    "example": "She was known for her sagacious advice.",
+    "exampleKo": "그녀는 현명한 조언으로 유명했습니다.",
+    "collocations": "sagacious advice"
+  },
+  "tenacious": {
+    "meaningKo": "끈기 있는",
+    "example": "She was tenacious in pursuing her goals.",
+    "exampleKo": "그녀는 자신의 목표를 추구하는 데 끈질기게 노력했습니다.",
+    "collocations": ""
+  },
+  "reticent": {
+    "meaningKo": "말이 없는",
+    "example": "He was very reticent about his past.",
+    "exampleKo": "그는 자신의 과거에 대해 매우 과묵했습니다.",
+    "collocations": ""
+  },
+  "insidious": {
+    "meaningKo": "교활한",
+    "example": "The disease has an insidious onset, with symptoms appearing gradually.",
+    "exampleKo": "이 질병은 서서히 발병하며 증상은 점차적으로 나타납니다.",
+    "collocations": "insidious threat/influence/onset"
+  },
+  "belligerent": {
+    "meaningKo": "교전국",
+    "example": "He became increasingly belligerent as the evening wore on.",
+    "exampleKo": "저녁이 지날수록 그는 점점 더 호전적으로 변했습니다.",
+    "collocations": ""
+  },
+  "capricious": {
+    "meaningKo": "변덕스러운",
+    "example": "The weather here is notoriously capricious.",
+    "exampleKo": "이곳의 날씨는 변덕스럽기로 악명 높습니다.",
+    "collocations": ""
+  },
+  "recalcitrant": {
+    "meaningKo": "고집 불통",
+    "example": "The recalcitrant child refused to cooperate with his parents.",
+    "exampleKo": "반항적인 아이는 부모의 협조를 거부했습니다.",
+    "collocations": ""
+  },
+  "complacent": {
+    "meaningKo": "안일한",
+    "example": "We must not become complacent about security.",
+    "exampleKo": "우리는 보안에 안주해서는 안 됩니다.",
+    "collocations": ""
+  },
+  "succinct": {
+    "meaningKo": "간결",
+    "example": "Please give me a succinct summary of the report.",
+    "exampleKo": "보고서에 대한 간략한 요약을 부탁드립니다.",
+    "collocations": "succinct summary/account"
+  },
+  "deleterious": {
+    "meaningKo": "해로운",
+    "example": "Smoking has deleterious effects on health.",
+    "exampleKo": "흡연은 건강에 해로운 영향을 미칩니다.",
+    "collocations": ""
+  },
+  "pernicious": {
+    "meaningKo": "유해한",
+    "example": "The pernicious effects of the policy became apparent over time.",
+    "exampleKo": "정책의 해로운 효과는 시간이 지나면서 명백해졌습니다.",
+    "collocations": ""
+  },
+  "ostensible": {
+    "meaningKo": "표면상의",
+    "example": "The ostensible reason for his visit was business, but he was really seeing a friend.",
+    "exampleKo": "방문 목적은 사업상의 이유로 방문했지만 실제로는 친구를 만나러 온 것이었습니다.",
+    "collocations": "ostensible reason/purpose"
+  },
+  "perfunctory": {
+    "meaningKo": "형식적인",
+    "example": "He gave a perfunctory nod of acknowledgement.",
+    "exampleKo": "그는 형식적으로 고개를 끄덕이며 인정했다.",
+    "collocations": "perfunctory manner/glance"
+  },
+  "ubiquitous": {
+    "meaningKo": "어디에나 있는",
+    "example": "The ubiquitous presence of CCTV cameras has become a feature of modern life.",
+    "exampleKo": "CCTV 카메라의 존재는 현대인의 삶의 특징이 되었습니다.",
+    "collocations": ""
+  },
+  "ephemeral": {
+    "meaningKo": "일시적인",
+    "example": "Fame in the world of pop music is often ephemeral.",
+    "exampleKo": "팝 음악계에서 명성은 일시적인 경우가 많습니다.",
+    "collocations": ""
+  },
+  "anachronistic": {
+    "meaningKo": "시대착오적인",
+    "example": "The film contained several anachronistic details, such as a character wearing a modern watch.",
+    "exampleKo": "영화에는 현대식 시계를 차고 있는 캐릭터 등 시대착오적인 여러 디테일이 담겨 있었다.",
+    "collocations": "anachronistic detail/element"
+  },
+  "inexorable": {
+    "meaningKo": "무정한",
+    "example": "The inexorable march of time cannot be stopped.",
+    "exampleKo": "거침없는 시간의 행진은 멈출 수 없다.",
+    "collocations": "inexorable march/rise"
+  },
+  "superficial": {
+    "meaningKo": "표면적인",
+    "example": "The report provided only a superficial analysis of a complex issue.",
+    "exampleKo": "보고서는 복잡한 문제에 대한 피상적인 분석만을 제공했습니다.",
+    "collocations": ""
+  },
+  "surreptitious": {
+    "meaningKo": "은밀한",
+    "example": "She took a surreptitious glance at her phone during the meeting.",
+    "exampleKo": "그녀는 회의 중에 휴대폰을 은밀하게 살펴보았습니다.",
+    "collocations": ""
+  },
+  "unequivocal": {
+    "meaningKo": "명백하다",
+    "example": "The government's message on the issue was unequivocal.",
+    "exampleKo": "이 문제에 대한 정부의 메시지는 분명했습니다.",
+    "collocations": ""
+  },
+  "volatile": {
+    "meaningKo": "휘발성 물질",
+    "example": "The political situation in the region remained highly volatile.",
+    "exampleKo": "이 지역의 정치적 상황은 여전히 매우 불안정했습니다.",
+    "collocations": ""
+  }
+}`);
 
 // Placement test questions bank
 export interface PlacementQuestion {
