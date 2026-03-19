@@ -3,8 +3,15 @@ import { VOCABULARY_BANK, VOCABULARY_WORKBOOK_OVERRIDES } from '@/lib/vocabulary
 import { prisma } from '@/lib/prisma';
 
 const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+const STUDY_SESSION_SIZE = 10;
+const STUDY_LEVEL_MIX = {
+  previous: 2,
+  current: 7,
+  next: 1,
+} as const;
 
 const getWorkbookOverride = (word: string) => VOCABULARY_WORKBOOK_OVERRIDES[word.toLowerCase()];
+const shuffle = <T,>(items: T[]) => [...items].sort(() => Math.random() - 0.5);
 
 const toVocabularyRecord = (item: (typeof VOCABULARY_BANK)[number]) => ({
   ...(() => {
@@ -53,11 +60,19 @@ export async function GET(request: Request) {
     const normalizedCurrentIdx = currentIdx >= 0 ? currentIdx : 0;
     const normalizedTargetIdx =
       targetIdx >= normalizedCurrentIdx ? targetIdx : normalizedCurrentIdx;
+    const currentStudyLevel = CEFR_LEVELS[normalizedCurrentIdx];
+    const previousStudyLevel = normalizedCurrentIdx > 0 ? CEFR_LEVELS[normalizedCurrentIdx - 1] : null;
+    const nextStudyLevel =
+      normalizedCurrentIdx < CEFR_LEVELS.length - 1 ? CEFR_LEVELS[normalizedCurrentIdx + 1] : null;
 
     const studyLevels =
       mode === 'all'
         ? CEFR_LEVELS
-        : CEFR_LEVELS.slice(normalizedCurrentIdx, normalizedTargetIdx + 1);
+        : mode === 'study'
+          ? [previousStudyLevel, currentStudyLevel, nextStudyLevel].filter(
+              (level): level is string => Boolean(level),
+            )
+          : CEFR_LEVELS.slice(normalizedCurrentIdx, normalizedTargetIdx + 1);
 
     await ensureVocabularyBankSeeded();
 
@@ -73,11 +88,41 @@ export async function GET(request: Request) {
     const studyVocabulary =
       mode === 'study'
         ? (() => {
-            const unlearnedVocabulary = vocabulary.filter(
-              (item) => !item.userProgress?.some((progress) => progress.status === 'learned'),
-            );
+            const vocabularyPool = (() => {
+              const unlearnedVocabulary = vocabulary.filter(
+                (item) => !item.userProgress?.some((progress) => progress.status === 'learned'),
+              );
 
-            return unlearnedVocabulary.length > 0 ? unlearnedVocabulary : vocabulary;
+              return unlearnedVocabulary.length > 0 ? unlearnedVocabulary : vocabulary;
+            })();
+
+            const currentLevelVocabulary = shuffle(
+              vocabularyPool.filter((item) => item.cefrLevel === currentStudyLevel),
+            );
+            const previousLevelVocabulary = previousStudyLevel
+              ? shuffle(vocabularyPool.filter((item) => item.cefrLevel === previousStudyLevel))
+              : [];
+            const nextLevelVocabulary = nextStudyLevel
+              ? shuffle(vocabularyPool.filter((item) => item.cefrLevel === nextStudyLevel))
+              : [];
+
+            const mixedVocabulary = [
+              ...currentLevelVocabulary.splice(0, STUDY_LEVEL_MIX.current),
+              ...previousLevelVocabulary.splice(0, STUDY_LEVEL_MIX.previous),
+              ...nextLevelVocabulary.splice(0, STUDY_LEVEL_MIX.next),
+            ];
+
+            if (mixedVocabulary.length < STUDY_SESSION_SIZE) {
+              mixedVocabulary.push(
+                ...[
+                  ...currentLevelVocabulary,
+                  ...previousLevelVocabulary,
+                  ...nextLevelVocabulary,
+                ].slice(0, STUDY_SESSION_SIZE - mixedVocabulary.length),
+              );
+            }
+
+            return mixedVocabulary;
           })()
         : vocabulary;
 
@@ -97,8 +142,8 @@ export async function GET(request: Request) {
       };
     });
 
-    const shuffled = [...vocabularyWithWorkbookData].sort(() => Math.random() - 0.5);
-    const result = mode === 'study' ? shuffled.slice(0, 10) : shuffled;
+    const shuffled = shuffle(vocabularyWithWorkbookData);
+    const result = mode === 'study' ? shuffled.slice(0, STUDY_SESSION_SIZE) : shuffled;
 
     return NextResponse.json({ vocabulary: result });
   } catch (error) {
