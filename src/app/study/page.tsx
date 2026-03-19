@@ -250,10 +250,14 @@ export default function StudyPage() {
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>{ui.englishMeaning}</p>
                   <p style={{ lineHeight: 1.7 }}>{word.meaning}</p>
                 </div>
-                <div className="card" style={{ padding: '16px' }}>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>{ui.koreanMeaning}</p>
-                  <p style={{ lineHeight: 1.7 }}>{displayMeaningKo || ui.koreanPending}</p>
-                </div>
+                {language === 'ko' ? (
+                  <div className="card" aria-hidden="true" style={{ padding: '16px' }} />
+                ) : (
+                  <div className="card" style={{ padding: '16px' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>{ui.koreanMeaning}</p>
+                    <p style={{ lineHeight: 1.7 }}>{displayMeaningKo || ui.koreanPending}</p>
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '14px' }}>
