@@ -25,7 +25,7 @@ const copyByLanguage = {
     loading: "Loading today's vocabulary...",
     emptyTitle: 'No words available',
     completeTitle: 'Session Complete!',
-    emptyBody: 'Complete the placement test first to get started.',
+    emptyBody: 'There are no study words available for your current level right now.',
     completeBody: (count: number) => `You studied ${count} words today. Great work!`,
     quiz: 'Take a Quiz',
     back: 'Back to Dashboard',
@@ -49,7 +49,7 @@ const copyByLanguage = {
     loading: '오늘의 단어를 불러오는 중입니다...',
     emptyTitle: '학습할 단어가 없어요',
     completeTitle: '학습 완료!',
-    emptyBody: '시작하려면 레벨 테스트를 먼저 완료해주세요.',
+    emptyBody: '현재 레벨에서 바로 학습할 단어가 없어요.',
     completeBody: (count: number) => `오늘 ${count}개의 단어를 학습했어요. 정말 잘했어요!`,
     quiz: '퀴즈 풀기',
     back: '대시보드로',
@@ -91,7 +91,7 @@ export default function StudyPage() {
       .then((response) => response.json())
       .then((dashboardData) => {
         const currentLevel = dashboardData?.userLevel?.currentCefr || 'A1';
-        const targetLevel = dashboardData?.userLevel?.targetCefr || 'B1';
+        const targetLevel = dashboardData?.userLevel?.targetCefr || currentLevel;
         return fetch(`/api/vocabulary?userId=${userId}&currentLevel=${currentLevel}&targetLevel=${targetLevel}&mode=study`);
       })
       .then((response) => response.json())

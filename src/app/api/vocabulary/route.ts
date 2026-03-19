@@ -4,6 +4,34 @@ import { prisma } from '@/lib/prisma';
 
 const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
+const toVocabularyRecord = (item: (typeof VOCABULARY_BANK)[number]) => ({
+  word: item.word,
+  partOfSpeech: item.partOfSpeech,
+  meaning: item.meaning,
+  meaningKo: item.meaningKo,
+  example: item.example,
+  exampleKo: item.exampleKo,
+  collocations: item.collocations.join(', '),
+  collocationsKo: item.collocationsKo?.join(', '),
+  cefrLevel: item.cefrLevel,
+});
+
+async function ensureVocabularyBankSeeded() {
+  const existingWords = await prisma.vocabulary.findMany({
+    select: { word: true },
+  });
+  const existingWordSet = new Set(existingWords.map((item) => item.word.toLowerCase()));
+  const missingVocabulary = VOCABULARY_BANK.filter(
+    (item) => !existingWordSet.has(item.word.toLowerCase()),
+  );
+
+  if (missingVocabulary.length > 0) {
+    await prisma.vocabulary.createMany({
+      data: missingVocabulary.map(toVocabularyRecord),
+    });
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -14,49 +42,38 @@ export async function GET(request: Request) {
 
     const currentIdx = CEFR_LEVELS.indexOf(currentLevel);
     const targetIdx = CEFR_LEVELS.indexOf(targetLevel);
+    const normalizedCurrentIdx = currentIdx >= 0 ? currentIdx : 0;
+    const normalizedTargetIdx =
+      targetIdx >= normalizedCurrentIdx ? targetIdx : normalizedCurrentIdx;
 
     const studyLevels =
       mode === 'all'
         ? CEFR_LEVELS
-        : CEFR_LEVELS.slice(Math.max(0, currentIdx), Math.max(0, targetIdx) + 1);
+        : CEFR_LEVELS.slice(normalizedCurrentIdx, normalizedTargetIdx + 1);
 
-    const vocabCount = await prisma.vocabulary.count();
-    if (vocabCount === 0) {
-      await prisma.vocabulary.createMany({
-        data: VOCABULARY_BANK.map((item) => ({
-          word: item.word,
-          partOfSpeech: item.partOfSpeech,
-          meaning: item.meaning,
-          meaningKo: item.meaningKo,
-          example: item.example,
-          exampleKo: item.exampleKo,
-          collocations: item.collocations.join(', '),
-          collocationsKo: item.collocationsKo?.join(', '),
-          cefrLevel: item.cefrLevel,
-        })),
-      });
-    }
-
-    const learnedVocabIds = userId
-      ? (
-          await prisma.userVocabProgress.findMany({
-            where: { userId, status: 'learned' },
-            select: { vocabId: true },
-          })
-        ).map((progress) => progress.vocabId)
-      : [];
+    await ensureVocabularyBankSeeded();
 
     const vocabulary = await prisma.vocabulary.findMany({
       where: {
         cefrLevel: { in: studyLevels },
-        ...(mode === 'study' && learnedVocabIds.length > 0 ? { id: { notIn: learnedVocabIds } } : {}),
       },
       include: {
         userProgress: userId ? { where: { userId } } : false,
       },
     });
 
-    const shuffled = vocabulary.sort(() => Math.random() - 0.5);
+    const studyVocabulary =
+      mode === 'study'
+        ? (() => {
+            const unlearnedVocabulary = vocabulary.filter(
+              (item) => !item.userProgress?.some((progress) => progress.status === 'learned'),
+            );
+
+            return unlearnedVocabulary.length > 0 ? unlearnedVocabulary : vocabulary;
+          })()
+        : vocabulary;
+
+    const shuffled = [...studyVocabulary].sort(() => Math.random() - 0.5);
     const result = mode === 'study' ? shuffled.slice(0, 10) : shuffled;
 
     return NextResponse.json({ vocabulary: result });
