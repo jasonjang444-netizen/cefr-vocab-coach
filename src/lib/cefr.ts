@@ -50,6 +50,10 @@ export function calculateProgress(current: string, target: string, wordsLearned 
   const targetLevel = normalizeCefrLevel(target);
   const gap = getLevelGap(currentLevel, targetLevel);
 
+  if (currentLevel === 'C2') {
+    return 0;
+  }
+
   if (gap <= 0) {
     return 100;
   }
