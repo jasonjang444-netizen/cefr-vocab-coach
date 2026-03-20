@@ -245,14 +245,19 @@ export default function StudyPage() {
             <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.95rem' }}>{ui.reveal}</p>
           ) : (
             <div className="animate-fade-in">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '14px' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: language === 'ko' ? 'repeat(auto-fit, minmax(220px, 1fr))' : 'minmax(220px, 1fr)',
+                  gap: '14px',
+                  marginBottom: '14px',
+                }}
+              >
                 <div className="card" style={{ padding: '16px' }}>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>{ui.englishMeaning}</p>
                   <p style={{ lineHeight: 1.7 }}>{word.meaning}</p>
                 </div>
-                {language === 'ko' ? (
-                  <div className="card" aria-hidden="true" style={{ padding: '16px' }} />
-                ) : (
+                {language === 'ko' && (
                   <div className="card" style={{ padding: '16px' }}>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>{ui.koreanMeaning}</p>
                     <p style={{ lineHeight: 1.7 }}>{displayMeaningKo || ui.koreanPending}</p>
@@ -260,15 +265,24 @@ export default function StudyPage() {
                 )}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '14px' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: language === 'ko' ? 'repeat(auto-fit, minmax(220px, 1fr))' : 'minmax(220px, 1fr)',
+                  gap: '14px',
+                  marginBottom: '14px',
+                }}
+              >
                 <div className="card" style={{ padding: '16px' }}>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>{ui.englishExample}</p>
                   <p style={{ lineHeight: 1.8, color: 'var(--text-secondary)' }}>&ldquo;{word.example}&rdquo;</p>
                 </div>
-                <div className="card" style={{ padding: '16px' }}>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>{ui.koreanExample}</p>
-                  <p style={{ lineHeight: 1.8 }}>{displayExampleKo || ui.koreanPending}</p>
-                </div>
+                {language === 'ko' && (
+                  <div className="card" style={{ padding: '16px' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>{ui.koreanExample}</p>
+                    <p style={{ lineHeight: 1.8 }}>{displayExampleKo || ui.koreanPending}</p>
+                  </div>
+                )}
               </div>
 
               <div className="card" style={{ padding: '16px', marginBottom: missingKoreanSupport ? '14px' : 0 }}>
