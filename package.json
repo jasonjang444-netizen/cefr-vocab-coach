@@ -7,11 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate",
+    "postinstall": "node scripts/postinstall.mjs",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate:deploy": "prisma migrate deploy",
-    "vercel-build": "prisma migrate deploy && next build",
+    "vercel-build": "node scripts/vercel-build.mjs",
     "db:studio": "prisma studio"
   },
   "dependencies": {
