@@ -43,12 +43,8 @@ export default function GlobalLanguageToggle() {
           boxShadow: '0 12px 30px rgba(15, 23, 42, 0.22)',
           backdropFilter: 'blur(12px)',
         }}
-        role="group"
-        aria-label={ui.label}
       >
-        <span className="language-toggle-label" style={{ color: 'var(--text-muted)', fontSize: '0.78rem', paddingLeft: '8px' }}>
-          {ui.label}
-        </span>
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', paddingLeft: '8px' }}>{ui.label}</span>
         {(['en', 'ko'] as const).map((value) => {
           const selected = language === value;
           return (
