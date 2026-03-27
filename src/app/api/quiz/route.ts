@@ -21,7 +21,7 @@ function shuffleArray<T>(array: T[]): T[] {
 
 function generateQuizQuestions(level: string): QuizQuestion[] {
   const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-  const levelIdx = levels.indexOf(level);
+  const levelIdx = levels.includes(level) ? levels.indexOf(level) : levels.indexOf('B1');
   const targetLevels = levels.slice(0, levelIdx + 1);
 
   const levelWords = VOCABULARY_BANK.filter((w) => targetLevels.includes(w.cefrLevel));

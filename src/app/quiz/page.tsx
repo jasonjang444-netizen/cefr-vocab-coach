@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/components/language-context';
 
 interface QuizQuestion {
@@ -42,10 +43,12 @@ const copyByLanguage = {
   },
 } as const;
 
-export default function QuizPage() {
+function QuizPageContent() {
   const { data: session } = useSession();
   const { language } = useLanguage();
+  const searchParams = useSearchParams();
   const ui = copyByLanguage[language];
+  const quizLevel = searchParams.get('level') || 'B1';
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -53,38 +56,71 @@ export default function QuizPage() {
   const [answers, setAnswers] = useState<{ questionIdx: number; selected: number; correct: number; word: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [finished, setFinished] = useState(false);
+  const [quizError, setQuizError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/quiz?level=B1')
-      .then((r) => r.json())
-      .then((data) => {
-        setQuestions(data.questions || []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+    let isActive = true;
+
+    const loadQuiz = async () => {
+      setLoading(true);
+      setQuizError(null);
+
+      try {
+        const response = await fetch(`/api/quiz?level=${encodeURIComponent(quizLevel)}`);
+
+        if (!response.ok) {
+          throw new Error(`Quiz request failed with status ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!isActive) {
+          return;
+        }
+
+        setQuestions(Array.isArray(data.questions) ? data.questions : []);
+      } catch {
+        if (isActive) {
+          setQuestions([]);
+          setQuizError('Failed to load quiz.');
+        }
+      } finally {
+        if (isActive) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadQuiz();
+
+    return () => {
+      isActive = false;
+    };
+  }, [quizLevel]);
 
   const handleAnswer = (answerIdx: number) => {
-    if (showResult) {
+    if (showResult || !questions[currentQ]) {
       return;
     }
 
     setSelectedAnswer(answerIdx);
     setShowResult(true);
-
-    const newAnswers = [
-      ...answers,
+    setAnswers((prev) => [
+      ...prev,
       {
         questionIdx: currentQ,
         selected: answerIdx,
         correct: questions[currentQ].correctAnswer,
         word: questions[currentQ].word,
       },
-    ];
-    setAnswers(newAnswers);
+    ]);
   };
 
   const handleNext = async () => {
+    if (!questions.length) {
+      return;
+    }
+
     setSelectedAnswer(null);
     setShowResult(false);
 
@@ -117,9 +153,54 @@ export default function QuizPage() {
     );
   }
 
+  if (quizError || questions.length === 0) {
+    return (
+      <div className="bg-grid bg-gradient-radial min-h-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <div className="animate-fade-in glass" style={{ width: '100%', maxWidth: '560px', textAlign: 'center', padding: '32px', borderRadius: '20px' }}>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '12px' }}>
+            Quiz unavailable
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: '1.6' }}>
+            {quizError || 'No quiz questions were generated for this level.'}
+          </p>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link href="/dashboard" className="btn-secondary" style={{ textDecoration: 'none' }}>Back to Dashboard</Link>
+            <button
+              onClick={() => {
+                setLoading(true);
+                setQuestions([]);
+                setFinished(false);
+                setCurrentQ(0);
+                setSelectedAnswer(null);
+                setShowResult(false);
+                setAnswers([]);
+                setQuizError(null);
+                fetch(`/api/quiz?level=${encodeURIComponent(quizLevel)}`)
+                  .then((response) => {
+                    if (!response.ok) {
+                      throw new Error(`Quiz request failed with status ${response.status}`);
+                    }
+
+                    return response.json();
+                  })
+                  .then((data) => setQuestions(Array.isArray(data.questions) ? data.questions : []))
+                  .catch(() => setQuizError('Failed to load quiz.'))
+                  .finally(() => setLoading(false));
+              }}
+              className="btn-primary"
+              style={{ border: 'none' }}
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (finished) {
     const score = answers.filter((a) => a.selected === a.correct).length;
-    const percentage = Math.round((score / questions.length) * 100);
+    const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
     const mistakes = answers.filter((a) => a.selected !== a.correct);
 
     return (
@@ -176,7 +257,7 @@ export default function QuizPage() {
   }
 
   const question = questions[currentQ];
-  const progress = (currentQ / questions.length) * 100;
+  const progress = questions.length > 0 ? (currentQ / questions.length) * 100 : 0;
   const questionTypeLabel =
     question?.type === 'meaning' ? ui.meaning : question?.type === 'fill-blank' ? ui.fillBlank : ui.usage;
 
@@ -280,5 +361,22 @@ export default function QuizPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function QuizPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="bg-grid bg-gradient-radial min-h-screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="animate-fade-in" style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '16px' }} className="animate-float">?</div>
+            <p style={{ color: 'var(--text-secondary)' }}>Loading quiz...</p>
+          </div>
+        </div>
+      }
+    >
+      <QuizPageContent />
+    </Suspense>
   );
 }
